@@ -1,0 +1,41 @@
+-- Create the StudentEnrollments table
+CREATE TABLE StudentEnrollments (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(100) NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
+    enrollment_date DATE NOT NULL
+);
+
+-- Insert initial data
+INSERT INTO StudentEnrollments (student_id, student_name, course_id, enrollment_date)
+VALUES 
+    (1, 'Ashish', 'CSE101', '2024-06-01'),
+    (2, 'Smaran', 'CSE102', '2024-06-01'),
+    (3, 'Vaibhav', 'CSE103', '2024-06-01');
+
+-- Session 1: Transaction 1
+BEGIN TRANSACTION;
+UPDATE StudentEnrollments 
+SET enrollment_date = '2024-07-01' 
+WHERE student_id = 1;
+-- Simulate a delay to allow Session 2 to start
+SELECT pg_sleep(1);
+UPDATE StudentEnrollments 
+SET enrollment_date = '2024-07-02' 
+WHERE student_id = 2;
+COMMIT;
+
+-- Session 2: Transaction 2 (run concurrently in another session)
+BEGIN TRANSACTION;
+UPDATE StudentEnrollments 
+SET enrollment_date = '2024-07-03' 
+WHERE student_id = 2;
+-- Simulate a delay to ensure deadlock
+SELECT pg_sleep(1);
+UPDATE StudentEnrollments 
+SET enrollment_date = '2024-07-04' 
+WHERE student_id = 1;
+COMMIT;
+
+-- Display final table state
+SELECT * FROM StudentEnrollments;
